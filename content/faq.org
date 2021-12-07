@@ -1,0 +1,141 @@
+#+title: Clojure FAQ
+#+author: qanazoga
+#+email: qanazoga@gmail.com
+
+* Introduction
+  Here are a collection of questions I keep forgetting the answers to, and an easy explanation thereof.
+
+* everything about ~contains?~
+  What do you think ~contains?~ does, if you said "it checks a collection to see if it /contains/ an item", you're wrong.
+  #+begin_src clojure
+  (contains? [0 1 2] 0) ;; => true
+  ;; makes sense!
+  
+  (contains? {:a 1, :b 2, :c 3} :b) ;; => true
+  ;; no issues so far...
+
+  (contains? [1 2 3] 3) ;; => false
+  ;; huh??
+  #+end_src
+  This is where people get thrown off. ~contains?~ doesn't check ~[1 2 3]~ to see if ~[3]~ is an entry,
+  it's checking to see if there is a 3rd index in ~[1 2 3]~ (which there isn't).
+  
+  Think of this as a way to see if ~get~ would work on the data structure with the provided argument.
+  #+begin_src clojure
+  (get [1 2 3] 3) ;; => nil
+  (contains? [1 2 3] 3) ;; false
+
+  (get [1 2 3] 0) ;; 1
+  (contains? [1 2 3] 0) ;; true
+  #+end_src
+
+  To check if an item is in a collection, you can use the java method ~.contains~ (or ~.includes~ in cljs)
+  #+begin_src clojure
+  (contains? [4] 4) ;; false
+  (.contains [4] 4) ;; true
+  #+end_src
+
+  Keep in mind, everything except ~false~ and ~nil~ are truthy, 
+  so a lot of the time you don't need to see if a collection ~contains?~ something, 
+  just ~get~ it (and provide a ~not-found~ argument if you need it).
+  #+begin_src clojure
+  (get [4] 4 :something-else) ;; => :something-else
+  (if (get [1 2 3] 0) ;; (get [1 2 3] 0) returns 1, which is truthy
+    :yep
+    :nope) ;; => :yep
+  #+end_src
+
+* ~map~ vs ~apply~
+   This is the one I forget most often.
+   
+   #+begin_src clojure
+   ;; the following
+   (map f [1 2 3 4])
+   ;; is a shortcut for
+   (f 1) (f 2) (f 3) (f 4)
+
+   ;; whereas the following
+   (apply f [1 2 3 4])
+   ;; is a shortcut for
+   (f 1 2 3 4)
+
+   ;; this can be combined in cool ways
+   (map #(apply max %) [[1 2 3] [4 5 6] [7 8 9]])
+   ;; is a shortcut for
+   (apply max [1 2 3]) (apply max [1 2 3]) (apply max [1 2 3])
+   ;; which in turn is a shortcut for
+   (max 1 2 3) (max 4 5 6) (max 7 8 9)   
+   #+end_src
+
+* ~apply~ vs ~reduce~
+  This one can get a bit weird at times.
+
+  #+begin_src clojure
+  (apply + [1 2 3 4])
+  ;; is the same as
+  (+ 1 2 3 4)
+  
+  (reduce + [1 2 3 4])
+  ;; is the same as 
+  (+ (+ (+ 1 2) 3) 4)
+  #+end_src
+  
+* ~some~ vs ~some?~
+   ~(some? x)~ returns true if the x is not nil, and false otherwise
+   #+begin_src clojure
+   (map some? [1 "butt" nil]) ;; => '(true true false)
+   #+end_src
+   
+   ~(some pred coll)~ returns the first truthy value in the collection when the predicate is applied
+   #+begin_src clojure
+   (some even? [1 2 3 4]) ;; => true
+   #+end_src
+
+* ~set~ vs ~hash-set~ vs ~sorted-set~
+   - ~(hash-set & keys)~, i.e. ~(hash-set 1 2 2 3)~ is the same as ~#{1 2 2 3}~, which resolves to ~#{1 2 3}~, 
+     but not necissarily in that order.  
+   - ~(sorted-set & keys)~ i.e. ~(sorted-set 1 3 2 2)~ resolves to ~#{1 2 3}~, always sorted.
+   - ~(set & coll)~ turns a collection into a set, shortcut for ~(apply hash-set [1 2 2 3])~
+
+* Data Structures as Functions
+   Some data structures implement ~IFn~, you can determine if they do by using ~(ifn? x)~, here are some examples:
+
+** Keywords & Symbols
+    ~(key map & not-found)~ and ~(sym map & not-found)~ are the same as ~(get map key & not-found)~ and ~(get map sym & not-found)~
+
+    examples:
+    #+begin_src clojure
+    (:b {:a 1, :b 2, :c 3}) ;; => 2
+    ;; is a shortcut for
+    (get {:a 1, :b 2, :c 3} :b) ;; => 2
+
+    ('z {:a 1, :b 2, :c 3} :nothing) ;; => :nothing
+    ;; is a shortcut for
+    (get {:a 1, :b 2, :c 3} 'z :nothing) ;; => nothing
+    #+end_src
+
+** Vectors
+    ~(vec index & not-found)~ is the same as ~(nth vec index & not-found)~
+    
+    examples:
+    #+begin_src clojure
+    ([:a :b :c :d] 1 :nothing) ;; => :b
+    ;; is a shortcut for
+    (nth [:a :b :c :d] 1 :nothing) ;; => :b
+    #+end_src
+
+** Maps
+    ~(map key & not-found)~ is the same as ~(get map key & not-found)~
+    #+begin_src clojure
+    (#{:a :b :c :d} :x :y) ;; => :y
+    #+end_src
+    
+** Sets
+    ~(set item & not-found)~ is the same as ~(get set item & not-found)~
+    #+begin_src clojure
+    (#{:a :b :c :d} :b) ;; => :b
+    
+    ;; This can be used for some cool things, for example, this gets all vowels from a string in order
+    (map (set "aeiou") "Sphinx of black quartz, judge my vow.") ;; =>    i    o     a     u a       u   e      o  
+    ;; (you can use clojure.string/join to bring these altogether.)
+    #+end_src
