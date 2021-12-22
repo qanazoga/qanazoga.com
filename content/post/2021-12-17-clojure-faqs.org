@@ -1,10 +1,14 @@
 #+title: Clojure FAQ
+#+subtitle: all the little bits I can never remember
+#+date: 2021-12-17
+#+tags[]: clojure
 #+author: qanazoga
 #+email: qanazoga@gmail.com
 
-* Introduction
-  Here are a collection of questions I keep forgetting the answers to, and an easy explanation thereof.
+Here are a collection of questions I keep forgetting the answers to, 
+and an easy explanation thereof.
 
+# more
 * everything about ~contains?~
   What do you think ~contains?~ does, if you said "it checks a collection to see if it /contains/ an item", you're wrong.
   #+begin_src clojure

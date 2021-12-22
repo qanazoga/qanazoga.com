@@ -1,0 +1,5 @@
+#+title: Paige's Hideaway
+
+* Hiya
+  I'm really bad at writing about myself, but I have a lot of interests I'm better at discussing.
+  Check out my [[file:post][blog]], [[file:page/projects][projects]], or [[file:recipe][recipes]].
