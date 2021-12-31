@@ -2,7 +2,7 @@
 
 This page still needs to be worked on,
 but is planned to be a index and map of all the other things I've got sites for,
-like [[https://carlisle-dev.com][Carlisle]] or [[https://qanazoga.com/planechase][Planechase]].
+like [[https://carlisle-bot.com][Carlisle]] or [[https://qanazoga.github.io/planechase][Planechase]].
 
 * Carlisle
   cool bot that does cool stuff.
